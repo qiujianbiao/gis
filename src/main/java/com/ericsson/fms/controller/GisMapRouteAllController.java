@@ -42,6 +42,7 @@ public class GisMapRouteAllController extends BaseController{
         }
 	}
 
+
 	@RequestMapping(value = "/maps/v1/mroute", method = RequestMethod.GET)
 	public List<RouteMessage> getGisMapMRoute(Double originLat, Double originLon,String destination, String mode, String units,String departureTime,String language) throws HttpException{
 		logger.info("=======getGisMapMRoute=======");
