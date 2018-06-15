@@ -195,7 +195,7 @@
 
     
   <build>
-      <finalName> ${project.artifactId}-${project.version}-${timestamp}-${env.GIT_SHORT_ID} </finalName>
+      <finalName> ${project.artifactId}-${project.version}-${timestamp}</finalName>
       <plugins>
           <plugin>
               <groupId>org.codehaus.mojo</groupId>
