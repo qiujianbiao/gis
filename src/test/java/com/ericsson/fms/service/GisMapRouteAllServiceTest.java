@@ -23,6 +23,6 @@ public class GisMapRouteAllServiceTest {
     @Test
     public void testGetRoute() throws Exception{
         RouteMessage routeMessage = new RouteMessage();
-        Mockito.when(gisMapRouteAllService.getRoute(Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyDouble(),Mockito.anyString(),Mockito.anyString(),Mockito.anyString())).thenReturn(routeMessage);
+        Mockito.when(gisMapRouteAllService.getRoute(Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyDouble(), Mockito.anyDouble(),Mockito.anyString(),Mockito.anyString(),Mockito.anyString(),Mockito.anyString())).thenReturn(routeMessage);
     }
 }
