@@ -1,0 +1,1787 @@
+swagger: '2.0'
+info:
+  description: >-
+    ### revision history  
+      Author | Date |Comment
+      - | :-: | -: 
+      jianbiao | 2017-11-8|created
+      jianbiao | 2017-12-11|updated exception description
+      jianbiao | 2017-12-12|method add language parameter
+      jianbiao | 2018-01-08|add roadSectionInfo/uploadRoadinfo/uploadTrafficSituation methods
+      jianbiao | 2018-02-01|add roadTraffic methods
+      jianbiao | 2018-02-23|add search-vehicles methods
+      jianbiao | 2018-03-13|update search-vehicles methods
+      jianbiao | 2018-04-25|support pagination of search-vehicles
+      jianbiao | 2018-05-08|add roadTrafficHistory,delete post traffic-situation,delete BatchTrafficSituationReuest,TrafficSituationMessage
+
+
+    ### Overview
+      This is the specification of ECF GIS Service API.
+
+    ### Get Started
+
+    GIS service interface is GIS API. The operations and parameters are described in this specification.
+
+    ### Use Cases
+
+    The GIS APIs supports the following operations
+
+    * __heatmap-grids__: query heatmap
+
+    * __roadinfo__: Querying road information by latitude and longitude
+
+    * __speed-limits__: returns the posted speed limit for a given road segment.
+
+    * __road-segments__: query road segments Information and upload road segments info data
+
+    * __road-history__: search road history
+
+    * __roadTraffic__: query road traffic information
+
+    * __roadTrafficHistory__: query history road traffic information
+
+    * __place__: Reverse geocoding is the process of converting geographic coordinates into a human-readable address.
+
+    * __geocoding__: Geocoding is the process of converting addresses (like a street address) into geographic coordinates (like latitude and longitude)
+
+    * __nearbysearch__: A Nearby Search request
+
+    * __route__: Route request
+
+    * __mroute__: Multiple route requests
+
+    * __search-distancematrix__: Distance matrix request
+
+    * __search-vehicles__: Query the information of the vehicle in the range by a polygon.
+
+  version: "1.0"
+  title: ECF Gis Service APIs Document
+  contact:
+    name: jianbiao.qiu@ericsson.com
+host: '[host]:8091'
+basePath: /
+tags:
+- name: "Heatmap"
+  description: "Heatmap service interface"
+- name: "Road Information"
+  description: "Road service interface"
+- name: "Map"
+  description: "Map service interface"
+schemes:
+- http
+paths:
+
+  /gis/heatmap/v1/heatmap-grids:
+    post:
+      summary: query map heatmap data
+      operationId: heatmap-grids
+      security:
+      - login: []
+      description: >-
+         According to an area of latitude and longitude or enterpriseType 、 enterprise ID, the parameters such as query map heatmap data
+      produces:
+      - application/json
+      tags:
+        - Heatmap
+      parameters:
+        - in: header
+          name: Accept-Encoding
+          required: true
+          description: Specifies the return of the compressed format (byte array), the value of gzip, if not   specified to return to the normal format JSON
+          type: string
+        - in: body
+          name: queryHeatmapBody
+          description: search heatmap body
+          required: true
+          schema:
+            $ref: '#/definitions/QueryHeatmapBody'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/HeatmapInfoMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/road/v1/roadinfo:
+    get:
+      summary: query road information
+      operationId: roadinfo
+      description: >-
+       Query the road information based on latitude and longitude
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Road Information
+      parameters:
+      - name: lat
+        description: latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoadInfoMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+
+  /gis/road/v1/speed-limits:
+    get:
+      summary: query speed limit information
+      operationId: speed-limits
+      description: >-
+        returns the posted speed limit for a given road segment.
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Road Information
+      parameters:
+      - name: lat
+        description: latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SpeedLimitMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /gis/road/v1/road-segments:
+    get:
+      summary: query road segments Information
+      operationId: roadSegmentsInfo
+      description: >-
+       Query the road segments information
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Road Information
+      parameters:
+      - name: lat
+        description: latitude, optional when segId or roadName exists, otherwise mandatory
+        in: query
+        required: false
+        type: number
+        format: double
+      - name: lon
+        description: longitude, optional when segId or roadName exists, otherwise mandatory
+        in: query
+        required: false
+        type: number
+        format: double
+      - name: roadName
+        description: road name, optional when lat/lon or segId exists, otherwise mandatory
+        in: query
+        type: string
+      - name: country
+        description: country, optional when lat/lon or segId exists, otherwise mandatory
+        in: query
+        type: string
+      - name: state
+        description: state , optional when lat/lon or segId exists, otherwise mandatory
+        in: query
+        type: string
+      - name: county
+        description: county , optional when lat/lon or segId exists, otherwise mandatory
+        in: query
+        type: string
+      - name: city
+        description: city , optional when lat/lon or segId exists, otherwise mandatory
+        in: query
+        type: string
+      - name: segId
+        description: unique Id of road segment, optional when lat/lon or roadName exists, otherwise mandatory
+        in: query
+        type: string
+      - in: query
+        name: count
+        description: specify a number of results to return
+        type: integer
+        required: false
+      - in: query
+        name: startIndex
+        description: query offset.
+        type: integer
+        required: false
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PaginationResponseRoadsegments'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+    post:
+      summary: upload road segments info data
+      operationId: uploadRoadinfo
+      security:
+      - login: []
+      description: >-
+         Upload road segments info data
+      produces:
+        - application/json
+      tags:
+        - Road Information
+      parameters:
+        - in: body
+          name: body
+          description: road body
+          required: true
+          schema:
+            $ref: '#/definitions/BatchRoadInfoRequest'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/BatchcreateResult'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+
+  /gis/road/v1/road-history:
+    get:
+      summary: search road history
+      operationId: searchRoadInfoHistory
+      security:
+      - login: []
+      description: >-
+         search the history of the road segments after request time.
+      tags:
+        - Road Information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+      - name: time
+        description: the create time of history record with UTC timezone
+        in: query
+        required: true
+        type: string
+        format: date-time
+        x-example: "2019-10-28T02:28:48.442Z"
+      - name: country
+        description: country name
+        in: query
+        type: string
+      - name: state
+        description: state name
+        in: query
+        type: string
+      - name: county
+        description: county name
+        in: query
+        type: string
+      - name: city
+        description: city name
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                id:
+                  description: Id
+                  type: string
+                  example: "111"
+                country:
+                  description: country
+                  type: string
+                  example: "country"
+                state:
+                  description: state
+                  type: string
+                  example: "state"
+                county:
+                  description: county
+                  type: string
+                  example: "county"
+                city:
+                  description: city
+                  type: string
+                  example: "city"
+                versionNum:
+                  description: versionNum
+                  type: string
+                  example: "versionNum"
+                createTime:
+                  description: The create time of history
+                  type: string
+                  example: "1515661737360"
+                  format: date-time
+                createTimeStr:
+                  description: The create time of history
+                  type: string
+                  example: "2017-09-28T09:35:43.511Z"
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/road/v1/roadTraffic:
+    get:
+      summary: query road traffic information
+      operationId: road-traffic
+      description: >-
+        returns the road traffic.
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Road Information
+      parameters:
+      - name: lat
+        description: latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: fore
+        description: It returns the results of the last forecast in the specified
+                    forecast interval made by PTV Optima short-term engine
+                    (values 900, 1800, 2700, 3600 (seconds)), if value = 0 that
+                    means it is fused data.
+        in: query
+        required: true
+        type: number
+        format: int32
+        enum:
+            - 0
+            - 900
+            - 1800
+            - 2700
+            - 3600
+      - name: trafficTime
+        description: the traffic time with UTC timezone
+        in: query
+        type: string
+        format: date-time
+        x-example: "2019-10-28T02:28:48.442Z"
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoadTraffic'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /gis/road/v1/roadTrafficHistory:
+    get:
+      summary: query history road traffic information
+      operationId: road-traffic-history
+      description: >-
+        returns the history road traffic.
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Road Information
+      parameters:
+      - name: lat
+        description: latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: trafficTime
+        description: the traffic time with UTC timezone
+        in: query
+        type: string
+        format: date-time
+        x-example: "2019-10-28T02:28:48.442Z"
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoadTraffic'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+  /gis/maps/v1/place:
+    get:
+      summary: query Place information
+      operationId: getPlace
+      description: >-
+        Reverse geocoding is the process of converting geographic coordinates into a human-readable address.
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - name: lat
+        description: lat
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: lon
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PlaceInfoMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/geocoding:
+    get:
+      summary: query geographic coordinates information
+      operationId: getGeocoding
+      description: >-
+        Geocoding is the process of converting addresses (like a street address) into geographic coordinates (like latitude and longitude)
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - name: address
+        description: address
+        in: query
+        required: true
+        type: string
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/GeoCodeInfoMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/nearbysearch:
+    get:
+      summary: A Nearby Search request
+      operationId: nearbysearch
+      description: >-
+        A Nearby Search request
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - name: lat
+        description: latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: lon
+        description: longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: radius
+        description:  Defines the distance (in meters) within which to return place results. The maximum allowed radius is 50 000 meters.
+        in: query
+        required: true
+        type: number
+        format: int32
+      - name: type
+        description: Restricts the results to places matching the specified type. Only one type may be specified (if more than one type is provided, all types following the first entry are ignored)
+        in: query
+        type: string
+        enum:
+            - accounting
+            - airport
+            - hospital
+            - bank
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/NearbysearchMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/route:
+    get:
+      summary: Route request
+      operationId: route
+      description: >-
+        Route request
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - name: originLat
+        description: origin latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: originLon
+        description: origin longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: destinationLat
+        description: destination latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: destinationLon
+        description: destination longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: mode
+        description: (default is driving) - specifies the traffic patterns to use when calculating routes
+        type: string
+        enum:
+            - driving
+            - walking
+            - bicycling
+            - transit
+        in: query
+      - name: units
+        description: The unit system used to specify the display result.
+        in: query
+        type: string
+        enum:
+            - metric
+            - imperial
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RouteMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/mroute:
+    get:
+      summary: Multiple route requests
+      operationId: mroute
+      description: >-
+        Multiple route requests
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - name: originLat
+        description: origin latitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: originLon
+        description: origin longitude
+        in: query
+        required: true
+        type: number
+        format: double
+      - name: destination
+        description: destinations, example： latitude1,longitude1;latitude,longitude2
+        in: query
+        required: true
+        type: string
+      - name: mode
+        description: (default is driving) - specifies the traffic patterns to use when calculating routes
+        type: string
+        enum:
+            - driving
+            - walking
+            - bicycling
+            - transit
+        in: query
+      - name: units
+        description: The unit system used to specify the display result.
+        in: query
+        type: string
+        enum:
+            - metric
+            - imperial
+      - name: language
+        description: ref '#/definitions/Language'
+        in: query
+        type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ListRouteMessage'
+
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/rpc/search-distancematrix:
+    post:
+      summary: Query Distance matrix request
+      operationId: distancematrix
+      description: >-
+        Distance matrix request
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - in: body
+        name: queryDistancematrixBody
+        description: search distancematrix body
+        schema:
+          $ref: '#/definitions/QueryDistancematrixBody'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Distancematrix'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /gis/maps/v1/rpc/search-vehicles:
+    post:
+      summary: query vehicle information by a polygon/vin/vrn
+      operationId: vehicle
+      description: >-
+        Query the information of the vehicle in the range by a polygon/vin/vrn.
+
+        The request parameter must have at least one of vins and vrns and geofence.
+
+        The vins and vrns parameters can only be found within 50 records
+      produces:
+      - application/json
+      security:
+      - login: []
+      tags:
+        - Map
+      parameters:
+      - in: body
+        name: queryVehiclePolygonBody
+        description: search vehicle by a polygon body
+        schema:
+          $ref: '#/definitions/QueryVehiclePolygonBody'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/VehiclePolygon'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+definitions:
+  ErrorResponse:
+    required:
+    - timestamp
+    - status
+    - error
+    - exception
+    - message
+    - path
+    properties:
+      timestamp:
+        type: string
+        format: date-time
+      status:
+        type: integer
+      error:
+        type: string
+      exception:
+        type: string
+      message:
+        type: string
+      path:
+        type: string
+
+  HeatmapInfoMessage:
+    type: object
+    description: GeoCodeInfo
+    properties:
+      lat:
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+      lon:
+        type: number
+        format: double
+        minimum: -180.0
+        maximum: 180.0
+
+      count:
+        type: integer
+        format: int64
+        description: count
+
+  RoadInfoMessage:
+    type: object
+    description: PlaceInfo
+    properties:
+      segId:
+        description: segId
+        type: integer
+      roadNumber:
+        description: roadNumber
+        type: string
+      roadName:
+        description: roadName
+        type: string
+      county:
+        description: county
+        type: string
+      city:
+        description: city
+        type: string
+      locationId:
+        description: locationId
+        type: string
+      locationName:
+        description: locationName
+        type: string
+      placeName:
+        description: placeName
+        type: string
+
+  RoadsegmentsMessage:
+    type: object
+    description: Road segments
+    properties:
+      gid:
+        description: geo object id
+        type: integer
+      segId:
+        description: unique Id that identifies every INRIX XD segment
+        type: integer
+      previousSegId:
+        description: Identifies the previous adjacent segment
+        type: integer
+      nextSegId:
+        description: Identifies the next adjacent segment
+        type: integer
+      frc:
+        description: Functional Road Classes - Category of the road
+        type: integer
+      distance:
+        description: Length of the XD segment, unit is meter
+        type: string
+      startLat:
+        description: latitude of the segment start point
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+      startLong:
+        description: longitude of the segment start point
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+      endLat:
+        description: latitude of the segment end point
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+      endLong:
+        description: longitude of the segment end point
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+      roadNumber:
+        description: road number
+        type: string
+      roadName:
+        description: road name
+        type: string
+      roadDirection:
+        description: direction of road(N, S, E, W)
+        type: string
+        enum:
+            - N
+            - S
+            - E
+            - W
+      roadList:
+        description: if belongs to multiple roads
+        type: string
+      country:
+        description: country
+        type: string
+      state:
+        description: state
+        type: string
+      county:
+        description: county
+        type: string
+      city:
+        description: city
+        type: string
+      postalCode:
+        description: postal code
+        type: string
+      specialroad:
+        description: special road
+        type: integer
+      isconnecto:
+        description: isconnecto
+        type: integer
+        format: int64
+      alltmclist:
+        description: alltmclist
+        type: string
+      primarytmc:
+        description: primarytmc
+        type: string
+      xdgroup:
+        description: xdgroup
+        type: string
+      linearid:
+        description: linearid
+        type: number
+        format: float
+      slipRoad:
+        description: Indication if the segment is a slip road or not.  0=not,1=yes
+        type: string
+        enum:
+            - 0
+            - 1
+      bearing:
+        description: direction of segment(N, S, E, W)
+        type: string
+        enum:
+            - N
+            - S
+            - E
+            - W
+      coordinates:
+        description: route points coordinates which compose of the road segment
+        type: array
+        items:
+          type: string
+      speedLimit:
+        description: speed limit per road segment, unit is km/h
+        type: integer
+      salikId:
+        description: salik id
+        type: string
+      meta:
+        description: meta info
+        type: string
+
+
+  RoadTraffic:
+    type: object
+    description: Road Traffic
+    properties:
+      segId:
+        description: unique Id that identifies every INRIX XD segment
+        type: integer
+      roadNumber:
+        description: road number
+        type: string
+      roadName:
+        description: road name
+        type: string
+      country:
+        description: country
+        type: string
+      state:
+        description: state
+        type: string
+      county:
+        description: county
+        type: string
+      city:
+        description: city
+        type: string
+      trafficTime:
+        description: traffic time in UTC
+        type: string
+        format: date-time
+      speed:
+        description: Average traffic speed (km/h).
+        type: integer
+        format: int64
+      baseSpeed:
+        description: Base speed of the link (km/h).
+        type: integer
+        format: int64
+      speedbucket:
+        description: The amount of congestion on the segment. A lower number represents higher congestion.
+          0 = speed is 0-31% of reference speed
+          1 = speed is 32-62% of reference speed
+          2 = speed is 63-92% of reference speed
+          3 = speed is 93-100% of reference speed
+          255 = road segment is closed
+        type: integer
+        format: int64
+
+  PaginationResponseRoadsegments:
+    description: EnterpriseProfiles Pagination Response
+    allOf:
+      - $ref: '#/definitions/PageResult'
+      - type: object
+        properties:
+          roads:
+            type: array
+            items:
+              $ref: '#/definitions/RoadsegmentsMessage'
+        required:
+          - list
+
+  BatchRoadInfoRequest:
+    type: array
+    minItems: 1
+    maxItems: 1000
+    description: RoadInfo request for batch provision
+    items:
+      $ref: '#/definitions/RoadsegmentsMessage'
+
+
+  PageResult:
+    type: object
+    description: pagination result info
+    properties:
+      startIndex:
+        type: integer
+        description: index of items to fetch from
+      totalResult:
+        type: integer
+        description: total amount of items fetched
+      itemsPerPage:
+        type: integer
+        description: record amount of per page
+
+  BatchcreateResult:
+    type: object
+    description: Batch create Result
+    properties:
+      data:
+        type: object
+        properties:
+          failedItems:
+            type: array
+            items:
+              allOf:
+                - $ref: '#/definitions/BatchMsgResponse'
+                - type: object
+          successfulItems:
+            type: array
+            items:
+              type: string
+              description: entity id
+
+  MsgResponse:
+    type: object
+    description: errCode and errMessage info
+    required:
+      - error
+      - error_description
+    properties:
+      error:
+        type: string
+      error_description:
+        type: string
+        description: error description
+
+  BatchMsgResponse:
+    description: batch errCode and errMessage info
+    allOf:
+      - $ref: '#/definitions/MsgResponse'
+      - type: object
+        properties:
+          id:
+            type: string
+            description: entity id
+
+  Position:
+    type: object
+    required:
+    - lat
+    - lon
+    properties:
+      lat:
+        description: latitude
+        type: number
+        format: double
+        minimum: -90.0
+        maximum: 90.0
+        example: 25.244537
+      lon:
+        description: longitude
+        type: number
+        format: double
+        minimum: -180.0
+        maximum: 180.0
+        example: 55.450455
+
+
+  PlaceInfoMessage:
+    type: object
+    description: PlaceInfo
+    properties:
+      formattedAddress:
+        description: address name
+        type: string
+
+      position:
+        $ref: '#/definitions/Position'
+
+      cityName:
+        description: cityName
+        type: string
+
+      types:
+        description: The types[] array indicates the type of the returned result. This array contains a set of zero or more tags identifying the type of feature returned in the result. For example, a geocode of "Chicago" returns "locality" which indicates that "Chicago" is a city, and also returns "political" which indicates it is a political entity.
+        type: array
+        items:
+          type: string
+
+      source:
+        description: source
+        type: string
+
+
+  GeoCodeInfoMessage:
+    type: object
+    description: GeoCodeInfo
+    properties:
+      formattedAddress:
+        description: address name
+        type: string
+
+      position:
+        $ref: '#/definitions/Position'
+
+      source:
+        description: source
+        type: string
+
+
+  SpeedLimitMessage:
+    type: object
+    description: SpeedLimit
+    properties:
+      source:
+        description: source
+        type: string
+      placeId:
+        description: The place ID(s) representing one or more road segments.
+        type: string
+      speedLimit:
+        type: integer
+        format: int64
+        description: The speed limit for that road segment.
+      units:
+        description: Whether to return speed limits in kilometers or miles per hour. This can be set to either KPH or MPH. Defaults to KPH.
+        type: string
+
+  NearbysearchMessage:
+    type: object
+    description: Nearbysearch
+    properties:
+      name:
+        description: name
+        type: string
+
+      position:
+        $ref: '#/definitions/Position'
+
+      id:
+        description: id
+        type: string
+
+      icon:
+        description: contains the URL of a recommended icon which may be displayed to the user when indicating this result.
+        type: string
+
+      source:
+        description: source
+        type: string
+
+  ListRouteMessage:
+    description: ListRouteMessage
+    type: array
+    items:
+          $ref: '#/definitions/RouteMessage'
+
+  RouteMessage:
+    type: object
+    description: Route
+    properties:
+      bounds:
+        $ref: '#/definitions/Bounds'
+      legs:
+        description: Legs[] contains an array, which contains the relevant information within a given section of a given route (between two positions).
+        type: array
+        items:
+          $ref: '#/definitions/Legs'
+      overviewPolyline:
+        $ref: '#/definitions/Polyline'
+      summary:
+        description: Short line text description
+        type: string
+      source:
+        description: source
+        type: string
+
+  Bounds:
+    type: object
+    description: Bounds
+    properties:
+      northeast:
+        $ref: '#/definitions/Position'
+      southwest:
+        $ref: '#/definitions/Position'
+
+  DistanceOrDuration:
+    type: object
+    description: DistanceOrDuration
+    properties:
+      text:
+        description: Distance (in meters) or Duration (in seconds)
+        type: string
+
+      value:
+        type: integer
+        format: int64
+        description: value
+
+  Polyline:
+    type: object
+    description: polyline
+    properties:
+      points:
+        description: Stores a line represented by a coded polyline. The broken line is the approximate (smoothing) path of the generated route
+        type: string
+
+
+  Steps:
+    type: object
+    description: steps
+    properties:
+      distance:
+        $ref: '#/definitions/DistanceOrDuration'
+      duration:
+        $ref: '#/definitions/DistanceOrDuration'
+      endLocation:
+        $ref: '#/definitions/Position'
+      htmlInstructions:
+        description: A formatted instruction containing this section is presented in the form of a HTML text string.
+        type: string
+      polyline:
+        $ref: '#/definitions/Polyline'
+      startLocation:
+        $ref: '#/definitions/Position'
+      travelMode:
+        description: travel Mode
+        type: string
+
+  Legs:
+    type: object
+    description: Legs
+    properties:
+      distance:
+        $ref: '#/definitions/DistanceOrDuration'
+      duration:
+        $ref: '#/definitions/DistanceOrDuration'
+      endAddress:
+        description: endAddress Usually the street address
+        type: string
+      endLocation:
+        $ref: '#/definitions/Position'
+      startAddress:
+        description: startAddress Usually the street address
+        type: string
+      startLocation:
+        $ref: '#/definitions/Position'
+      steps:
+        type: array
+        items:
+          $ref: '#/definitions/Steps'
+      trafficSpeedEntry:
+        description: trafficSpeedEntry
+        type: array
+        items:
+          type: string
+      viaWaypoint:
+        description: viaWaypoint
+        type: array
+        items:
+          type: string
+
+  Elements:
+    type: object
+    description: elements
+    properties:
+      distance:
+        $ref: '#/definitions/DistanceOrDuration'
+      duration:
+        $ref: '#/definitions/DistanceOrDuration'
+
+  DisAndDurs:
+    type: object
+    description: elements
+    properties:
+      distance:
+        type: number
+        format: double
+      duration:
+        type: number
+        format: double
+      originAddresses:
+          description: starting addresses returned
+          type: string
+      destinationAddress:
+          description: destination addresses returned
+          type: string
+
+
+  Distancematrix:
+    description: Distancematrix Response
+    allOf:
+      - type: object
+        properties:
+          matrix:
+            type: array
+            items:
+              $ref: '#/definitions/DisAndDurs'
+          source:
+            description: source
+            type: string
+        required:
+          - list
+
+  VehiclePosition:
+    type: object
+    description: VehiclePosition
+    properties:
+      time:
+          description: The desired time of departure. You can specify the time as an integer in seconds since midnight, January 1, 1970 UTC. Alternatively, you can specify a value of now
+          type: string
+          format: date-time
+          example: "2019-10-28T02:28:48.442Z"
+      location:
+        type: object
+        $ref: '#/definitions/Position'
+
+  firstLast:
+    description: Vehicle first last Position.
+    allOf:
+      - type: object
+        properties:
+          first:
+            $ref: '#/definitions/VehiclePosition'
+          last:
+            $ref: '#/definitions/VehiclePosition'
+
+
+  VehiclesMessage:
+    allOf:
+      - type: object
+        properties:
+          vin:
+            description: vin
+            type: string
+            example: "vin01"
+          driverName:
+            description: driver name
+            type: string
+            example: "peter"
+          driverLicenseNum:
+            description: driver license num
+            type: string
+            example: "vip3212223"
+          position:
+            description: Vehicle all Position.
+            type: array
+            items:
+              $ref: '#/definitions/VehiclePosition'
+      - $ref: '#/definitions/firstLast'
+
+
+
+  VehiclePolygon:
+    description: Vehicle Response
+    type: object
+    properties:
+      pageNo:
+        description: current Page
+        type: integer
+        format: int32
+        example: 1
+      total:
+        description: total number of vehicles which  are returned in this response
+        type: integer
+        format: int32
+        example: 1
+      pageSize:
+        description: total number of vehicles which are returned in this response
+        type: integer
+        format: int32
+        example: 1
+      totalPage:
+        description: total Page number of vehicles which are returned in this response
+        type: integer
+        format: int32
+        example: 1
+      vehicles:
+        type: array
+        items:
+          $ref: '#/definitions/VehiclesMessage'
+
+
+  Geofence:
+    description: 'The Geofence. The value must be one of its inheritor, such as CircleGeofence or PolygonGeofence.'
+    type: object
+    discriminator: shape
+    required:
+      - shape
+    properties:
+      shape:
+        type: string
+        enum:
+          - PolygonGeofence
+          - CircleGeofence
+  CircleGeofence:
+    description: The Circle Geofence. It inherits from Geofence.
+    allOf:
+      - $ref: '#/definitions/Geofence'
+      - type: object
+        required:
+          - center
+          - radius
+        properties:
+          center:
+            $ref: '#/definitions/Position'
+            description: The center of the circle Geofence.
+          radius:
+            type: number
+            format: double
+            description: The radius of the circle Geofence.
+  PolygonGeofence:
+    description: The Polygon Geofence. It inherits from Geofence.
+    allOf:
+      - $ref: '#/definitions/Geofence'
+      - type: object
+        required:
+          - vertices
+        properties:
+          vertices:
+            type: array
+            items:
+              $ref: '#/definitions/Position'
+            minItems: 3
+            description: The vertices member is a Position.
+
+  QueryDistancematrixBody:
+    description: query Distancematrix body
+    properties:
+      matrix:
+        type: array
+        items:
+            type: object
+            required:
+            - origin
+            - destination
+            properties:
+              origin:
+                description: The starting point for calculating travel distance and time. Can address, latitude / longitude coordinates or location ID (required),example:"lat,lng"
+                type: string
+                example: "51.12345,2.12345"
+              destination:
+                description: One or more positions used as end points to calculate travel distance and time. Can address, latitude / longitude coordinates or location ID  (required),example:"lat,lng"
+                type: string
+                example: "55.12345,3.12345"
+      departureTime:
+        description: The desired time of departure. You can specify the time as an integer in seconds since midnight, January 1, 1970 UTC. Alternatively, you can specify a value of now
+        type: string
+        format: date-time
+        example: "2019-10-28T02:28:48.442Z"
+      mode:
+        description: (default is driving) - specifies the traffic patterns to use when calculating routes
+        type: string
+        enum:
+            - driving
+            - walking
+            - bicycling
+            - transit
+      language:
+        description: ref '#/definitions/Language'
+        type: string
+
+  QueryHeatmapBody:
+    description: query heatmap body
+    properties:
+      oemId:
+        description: oemId
+        type: string
+      fleetIds:
+        description: fleetIds
+        type: array
+        items:
+          type: string
+      enterpriseIds:
+        description: enterpriseIds
+        type: array
+        items:
+          type: string
+      type:
+        description: type required
+        type: string
+        enum:
+            - vehicle-location
+            - trip-pickup
+            - trip-dropoff
+      precision:
+        description: precision default 7
+        type: integer
+        format: int64
+      vehicleTypes:
+        description: vehicleTypes
+        type: array
+        items:
+          type: string
+      enterpriseTypes:
+        description: enterpriseTypes
+        type: array
+        items:
+          type: string
+      topLeft:
+        description: topLeft example： latitude,longitude
+        type: string
+      bottomRight:
+        description: bottomRight example： latitude,longitude
+        type: string
+      startTime:
+        description: startTime required
+        type: string
+        format: date-time
+      endTime:
+        description: endTime required
+        type: string
+        format: date-time
+
+  QueryVehiclePolygonBody:
+    description: query Vehicle by Polygon body
+    properties:
+      startTime:
+        description: startTime required
+        type: string
+        format: date-time
+        example: "2019-10-28T02:28:48.442Z"
+      endTime:
+        description: endTime required
+        type: string
+        format: date-time
+        example: "2019-10-28T02:28:48.442Z"
+      geofence:
+        description: trip start geofence. search those trips which start position is in this geofence.
+        $ref: '#/definitions/Geofence'
+      searchType:
+        description: optional, default is simple, it means only return first and last positions.
+        type: string
+        enum:
+            - FULL
+            - SIMPLE
+        example: "SIMPLE"
+      oemId:
+        description: oemId
+        type: string
+        example: "oem001"
+      vins:
+        description: vehicle Ids.
+        type: object
+        properties:
+          type:
+            description: search type.
+            type: string
+            enum:
+            - EXACT
+            - PREFIX
+            - WILDCARD
+            default: EXACT
+            example: "EXACT"
+          values:
+            type: array
+            items:
+              type: string
+              minLength: 1
+            example: ["vin001"]
+      vrns:
+        description: vehicle registered numbers/license numbers.
+        type: object
+        properties:
+          type:
+            description: search type.
+            type: string
+            enum:
+            - EXACT
+            - PREFIX
+            - WILDCARD
+            default: EXACT
+            example: "EXACT"
+          values:
+            type: array
+            items:
+              type: string
+              minLength: 1
+            example: ["vrn001"]
+      fleetIds:
+        type: array
+        description: fleet Ids.
+        example: ["fleet001"]
+        items:
+          type: string
+      enterpriseIds:
+        description: enterprise Ids.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        example: ["enterprise001"]
+      vehicleTypes:
+        description: vehicle types.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        example: ["TAXI"]
+      enterpriseTypes:
+        description: enterprise types.
+        type: array
+        items:
+          type: string
+          minLength: 1
+        example: ["TAXI"]
+      pageSize:
+        description: please only return this pageSize number of result, if total number is great than this pageSize.
+        type: integer
+        format: int32
+        default: 10
+      pageNo:
+        description: current page
+        type: integer
+        format: int32
+        default: 1
+
+
+  Language:
+    description: Please refer to the list of supported languages https://developers.google.com/maps/faq?hl=en#languagesupport
+    properties:
+      ar:
+        description: Arabic
+      ko:
+        description: Korean
+      de:
+        description: German
+      nl:
+        description: Dutch
+      en:
+        description: English
+      pt:
+        description: Portuguese
+      es:
+        description: Spanish
+      ru:
+        description: Russian
+      fr:
+        description: French
+      ja:
+        description: Japanese
+      zh-CN:
+        description: Chinese (Simplified)
+      zh-TW:
+        description: Chinese (Traditional)
+
+       
+        
+securityDefinitions:
+  login:
+    type: basic
+    description: Basic authentication
+
+

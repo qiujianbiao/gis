@@ -1,0 +1,50 @@
+1.add new  api
+1) Upload road segments info data
+2) Query the road segments information
+3) search the history of the road segments after request time.
+4) query road traffic information
+
+2.update  api
+1)search-distancematrix method add new parameters and output new format data
+
+3)gisRoadMapper.xml config changed:
+    1) add item:
+      id="getRoadHistorys"
+      id="insertTrafficByBatch"
+      id="deleteBySegIdGisRoadByBatch"
+      id="insertGisRoadByBatch"
+      id="findPageRoadSegment"
+      id="getRoadTraffic"
+
+2.application-xx.properties config changed:
+	1) add item:
+    #dubai:rta others:others/empty
+    gismap.active=rta
+    gismap.redis.value.keepdays=90
+
+    #openstreetmap properties
+    gismap.openstreetmap.api_url=http://nominatim.openstreetmap.org/reverse
+    gismap.openstreetmap.addressdetails=1
+    gismap.openstreetmap.zoom=18
+    gismap.openstreetmap.searchapi_url=http://nominatim.openstreetmap.org/search
+
+
+    #pagehelper
+    pagehelper.helperDialect=PostgreSQL
+    pagehelper.reasonable=true
+    pagehelper.supportMethodsArguments=true
+    pagehelper.params=count=countSql
+
+3.application.properties config changed:
+    gis.distance=0.0005
+
+2018-2-27:
+update insertGisRoadByBatch method,add insert RoadHistory.
+
+
+
+2018-04-24(this week(4.27) update to SIT,MainSite)
+    support pagination of search-vehicles
+    update road segment import
+
+    1)execute \data\gis_table.sql

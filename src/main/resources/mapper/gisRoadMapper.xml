@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ericsson.fms.dao.GisRoadDao">
+
+    <sql id="column_list">
+        segId,
+        roadNumber,
+        roadName,
+        county,
+        lineString,
+        distance
+    </sql>
+
+    <resultMap id="roadBean" type="RoadBean" >
+        <id  column="segId" property="segId" />
+        <result column="roadNumber" property="roadNumber" />
+        <result column="roadName" property="roadName" />
+        <result column="county" property="county" />
+        <result column="city" property="city" />
+        <result column="placeName" property="placeName" />
+    </resultMap>
+
+
+    <resultMap id="roadHistory" type="RoadHistory" >
+        <id  column="id" property="id"  jdbcType="INTEGER"/>
+        <result column="country" property="country"  jdbcType="VARCHAR"/>
+        <result column="state" property="state"  jdbcType="VARCHAR"/>
+        <result column="county" property="county"  jdbcType="VARCHAR"/>
+        <result column="city" property="city"  jdbcType="VARCHAR"/>
+        <result column="versionnum" property="versionNum"  jdbcType="VARCHAR"/>
+        <result column="createtime" property="createTime"  jdbcType="VARCHAR"/>
+    </resultMap>
+
+
+    <resultMap id="salik" type="Salik" >
+        <id  column="salikname" property="salikName" />
+        <result column="roadname" property="roadName" />
+        <result column="lat" property="lat" />
+        <result column="lon" property="lon" />
+    </resultMap>
+
+    <resultMap id="roadTraffic" type="RoadTraffic" >
+        <id  column="segid" property="segId" jdbcType="VARCHAR"/>
+        <result column="roadnumber" property="roadNumber" jdbcType="VARCHAR"/>
+        <result column="roadname" property="roadName" jdbcType="VARCHAR"/>
+        <result column="country" property="country"  jdbcType="VARCHAR"/>
+        <result column="state" property="state"  jdbcType="VARCHAR"/>
+        <result column="county" property="county"  jdbcType="VARCHAR"/>
+        <result column="city" property="city"  jdbcType="VARCHAR"/>
+        <result column="traffictime" property="trafficTime" jdbcType="VARCHAR"/>
+        <result column="speed" property="speed" jdbcType="FLOAT"/>
+        <result column="basespeed" property="baseSpeed" jdbcType="FLOAT"/>
+        <result column="speedbucket" property="speedBucket" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <resultMap id="roadSegment" type="RoadSegment" >
+        <id column="gid" property="gid" jdbcType="INTEGER"/>
+        <result column="segid" property="segId" jdbcType="VARCHAR"/>
+        <result column="previoussegid" property="previousSegId" jdbcType="BIGINT"/>
+        <result column="nextsegid" property="nextSegId" jdbcType="BIGINT"/>
+        <result column="frc" property="frc" jdbcType="INTEGER"/>
+        <result column="distance" property="distance" jdbcType="VARCHAR"/>
+        <result column="lanes" property="lanes" jdbcType="INTEGER"/>
+        <result column="startlat" property="startLat" jdbcType="DOUBLE"/>
+        <result column="startlong" property="startLong" jdbcType="DOUBLE"/>
+        <result column="endlat" property="endLat" jdbcType="DOUBLE"/>
+        <result column="endlong" property="endLong" jdbcType="DOUBLE"/>
+        <result column="roadnumber" property="roadNumber" jdbcType="VARCHAR"/>
+        <result column="roadname" property="roadName" jdbcType="VARCHAR"/>
+        <result column="roaddirection" property="roadDirection" jdbcType="VARCHAR"/>
+        <result column="roadlist" property="roadList" jdbcType="VARCHAR"/>
+        <result column="country" property="country" jdbcType="VARCHAR"/>
+        <result column="state" property="state" jdbcType="VARCHAR"/>
+        <result column="county" property="county" jdbcType="VARCHAR"/>
+        <result column="city" property="city" jdbcType="VARCHAR"/>
+        <result column="sliproad" property="slipRoad" jdbcType="INTEGER"/>
+        <result column="bearing" property="bearing" jdbcType="VARCHAR"/>
+        <result column="speedlimit" property="speedLimit" jdbcType="INTEGER"/>
+        <result column="coordinates" property="coordinates" jdbcType="VARCHAR"/>
+        <result column="lastmodified" property="lastModified" jdbcType="VARCHAR"/>
+
+        <result column="strt" property="strt" jdbcType="DOUBLE"/>
+        <result column="fsnd" property="fsnd" jdbcType="DOUBLE"/>
+        <result column="head" property="head" jdbcType="DOUBLE"/>
+        <result column="refe" property="refe" jdbcType="INTEGER"/>
+        <result column="hier" property="hier" jdbcType="INTEGER"/>
+        <result column="salikname" property="salikName" jdbcType="VARCHAR"/>
+
+    </resultMap>
+
+    <select id="getRoadInfo"  resultMap="roadBean" >
+        select segid as segId,roadnumber as roadNumber,roadname as roadName,county,
+        ST_Distance(geom,st_geometryfromtext('POINT(${lon} ${lat})', 4326)) as distance
+        from fms_roadinfo_gis
+        order by distance
+        limit 1;
+    </select>
+
+    <select id="getPlaceInfo"  resultMap="roadBean" >
+        select locationid as locationId,locationname as locationName,placename as placeName from fms_placeinfo_gis
+        where 't' = (SELECT  ST_Within(st_geometryfromtext('POINT(${lon} ${lat})',4326),geom))
+        limit 1;
+    </select>
+
+    <select id="getRoadHistorys"  resultMap="roadHistory" >
+        select id,country,city,state,county,versionNum,createtime from gis_road_history
+        where 1 = 1
+        <if test="createTime != null  and createTime != '' ">
+            <![CDATA[   and createTime >=  to_timestamp(#{createTime}, 'yyyy-mm-dd HH24:MI:SS')   ]]>
+        </if>
+        <if test="country != null  and country != '' ">
+            and country=#{country}
+        </if>
+        <if test="state != null  and state != '' ">
+            and state=#{state}
+        </if>
+        <if test="county != null  and county != '' ">
+            and county=#{county}
+        </if>
+        <if test="city != null  and city != '' ">
+            and city=#{city}
+        </if>
+    </select>
+
+
+    <insert id="insertRoadHistoryList" parameterType="java.util.List">
+        insert into gis_road_history(country,city,state,county,versionnum,createtime)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.country},#{item.city},#{item.state},#{item.county},#{item.versionNum},current_timestamp)
+        </foreach>
+    </insert>
+
+
+    <delete id="deleteRoadSegmentsBySegId" parameterType="java.util.List">
+        delete from gis_road
+        where segid IN
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item.segId}
+        </foreach>
+    </delete>
+
+    <insert id="insertRoadSegmentsByBatch" parameterType="java.util.List">
+        insert into gis_road (segid,previoussegid,nextsegid,frc,distance,lanes,startlat,startlong,endlat,endlong,roadnumber,roadname,roaddirection,roadlist,country,state,county,city,sliproad,bearing,speedlimit,coordinates,geom,objectId,strt,fsnd,head,refe,hier,salikName,lastModified)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.segId},#{item.previousSegId},#{item.nextSegId},#{item.frc},#{item.distance},#{item.lanes},#{item.startLat},#{item.startLong},#{item.endLat},#{item.endLong},#{item.roadNumber},#{item.roadName},#{item.roadDirection},#{item.roadList},#{item.country},#{item.state},#{item.county},#{item.city},#{item.slipRoad},#{item.bearing},#{item.speedLimit},#{item.coordinates},ST_GeomFromText(#{item.coordinates},4326),#{item.objectId},#{item.strt},#{item.fsnd},#{item.head},#{item.refe},#{item.hier},#{item.salikName},to_timestamp(#{item.lastModified}, 'yyyy-mm-dd HH24:MI:SS'))
+        </foreach>
+    </insert>
+
+
+    <select id="findPageRoadSegment"  resultMap="roadSegment" useCache="false" >
+        select segid,roadnumber,roadname,country,state,county,city,speedlimit,salikname,lastModified,coordinates
+        <if test="lat != null  and lat != '' and lon != null  and lon != '' ">
+            ,ST_Distance(geom,st_geometryfromtext('POINT(${lon} ${lat})', 4326)) as distance
+        </if>
+        from gis_road
+        where 1 = 1
+        <if test="segId != null  and segId != '' ">
+            and segid=#{segId}
+        </if>
+        <if test="roadName != null  and roadName != '' ">
+            and roadname=#{roadName}
+        </if>
+        <if test="country != null  and country != '' ">
+            and country=#{country}
+        </if>
+        <if test="state != null  and state != '' ">
+            and state=#{state}
+        </if>
+        <if test="county != null  and county != '' ">
+            and county=#{county}
+        </if>
+        <if test="city != null  and city != '' ">
+            and city=#{city}
+        </if>
+        <if test="lat != null  and lat != '' and lon != null  and lon != '' ">
+            order by distance
+        </if>
+    </select>
+
+    <select id="findPageAllRoadSegment"  resultMap="roadSegment" useCache="false" >
+        select gid,segid,previoussegid,nextsegid,frc,distance,lanes,startlat,startlong,endlat,endlong,roadnumber,roadname,roaddirection,roadlist,country,state,county,city,sliproad,bearing,speedlimit,coordinates,lastmodified,strt,fsnd,head,refe,hier,salikname
+        from gis_road
+    </select>
+
+    <select id="getRoadTraffic"  resultMap="roadTraffic" >
+        select road.segid,road.roadnumber,road.roadname,road.county,traffic.traffictime,traffic.speed,traffic.baseSpeed,traffic.speedbucket,
+        ST_Distance(geom,st_geometryfromtext('POINT(${lon} ${lat})', 4326)) as distance
+        from gis_road as road,gis_traffic as traffic
+        where 1=1
+        and road.segid = traffic.segid
+        <if test="startTime != null  and startTime != '' and endTime != null  and endTime != '' ">
+            and traffic.traffictime between to_timestamp(#{startTime}, 'yyyy-mm-dd HH24:MI:ss') and to_timestamp(#{endTime}, 'yyyy-mm-dd HH24:MI:ss')
+        </if>
+        <if test="fore != null ">
+            and traffic.fore = #{fore}
+        </if>
+        order by distance
+        limit 1;
+    </select>
+
+
+    <select id="getRoadTrafficHistory"  resultMap="roadTraffic" >
+        select road.segid,road.roadnumber,road.roadname,road.county,traffic.traffictime,traffic.speed,traffic.baseSpeed,traffic.speedbucket,
+        ST_Distance(geom,st_geometryfromtext('POINT(${lon} ${lat})', 4326)) as distance
+        from gis_road as road,gis_traffic_history as traffic
+        where 1=1
+        and road.segid = traffic.segid
+        <if test="startTime != null  and startTime != '' and endTime != null  and endTime != '' ">
+            and traffic.traffictime between to_timestamp(#{startTime}, 'yyyy-mm-dd HH24:MI:ss') and to_timestamp(#{endTime}, 'yyyy-mm-dd HH24:MI:ss')
+        </if>
+        order by distance
+        limit 1;
+    </select>
+
+
+    <select id="getSalik"  resultMap="salik" >
+        select salikname,lat,lon,roadname from gis_salik;
+    </select>
+
+    <select id="getGisRoadSingle"  resultMap="roadSegment" >
+        select segid as segId,
+        ST_Distance(geom,st_geometryfromtext('POINT(${lon} ${lat})', 4326)) as distance
+        from gis_road
+        order by distance
+        limit 1;
+    </select>
+
+    <update id="updateGisRoad" parameterType="roadSegment">
+        update gis_road set salikname = #{salikName},roadname = #{roadName}
+        where segid = #{segId}
+    </update>
+
+    <delete id="removeDuplicateRoadHistory">
+        delete from  gis_road_history where id not in (select min(id) from gis_road_history group by city,versionnum);
+    </delete>
+
+</mapper>

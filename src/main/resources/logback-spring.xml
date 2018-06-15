@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<configuration scan="true">
+
+    <!-- Spring Environment读取属性，以便在Logback中使用 -->
+    <springProperty scope="context" name="logPath" source="logger.logPath" defaultValue="/home/tcLogs"/>
+    <springProperty scope="context" name="historyPath" source="logger.historyPath" defaultValue="/home/tcLogs/history"/>
+	
+    <!-- TC日志 appender -->  
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">  
+        <file>${logPath}/gis-service.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">  
+            <!-- 按天回滚 daily -->  
+            <fileNamePattern>${historyPath}/gis-service-%d{yyyy-MM-dd}.log
+            </fileNamePattern>  
+            <!-- 日志最大的历史 60天 -->  
+            <maxHistory>60</maxHistory>  
+        </rollingPolicy>  
+        <encoder>  
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [gis-service] [%level] [%logger{36}] %msg%n</pattern>  
+        </encoder>
+    </appender>
+    
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [gis-service] [%level] [%logger{36}] %msg%n</pattern>
+		</layout>
+	</appender>
+	
+	<logger name="com.ericsson.fms" level="DEBUG">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="FILE" />
+	</logger>
+	
+	<logger name="org.springframework" level="INFO">
+        <appender-ref ref="FILE" />
+    </logger>
+    
+</configuration> 

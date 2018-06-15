@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ericsson.fms.dao.GisPoiDao">
+
+    <sql id="column_list">
+        label,description,address,geomType,geomPoint,geomLine,geomPolygon,
+        geomCircle,circleRadius,category,tags,links,author,externalId,oemId,
+        enterpriseIds,displayMode,status,metadata
+    </sql>
+
+    <resultMap id="gisPoiVo" type="com.ericsson.fms.domain.GisPoiVo" >
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="label" property="label" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="geomType" property="geomType" jdbcType="VARCHAR"/>
+        <result column="geomPoint" property="geomPoint" jdbcType="VARCHAR"/>
+        <result column="geomLine" property="geomLine" jdbcType="VARCHAR"/>
+        <result column="geomPolygon" property="geomPolygon" jdbcType="VARCHAR"/>
+        <result column="geomCircle" property="geomCircle" jdbcType="VARCHAR"/>
+        <result column="circleRadius" property="circleRadius" jdbcType="DOUBLE"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="tags" property="tags" jdbcType="VARCHAR"/>
+        <result column="links" property="links" jdbcType="VARCHAR"/>
+        <result column="author" property="author" jdbcType="VARCHAR"/>
+        <result column="externalId" property="externalId" jdbcType="VARCHAR"/>
+        <result column="oemId" property="oemId" jdbcType="VARCHAR"/>
+        <result column="enterpriseIds" property="enterpriseIds" jdbcType="VARCHAR"/>
+        <result column="displayMode" property="displayMode" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="metadata" property="metadata" jdbcType="VARCHAR"/>
+    </resultMap>
+
+	<resultMap id="poiBean" type="PoiBean" >
+		<id column="id" property="id" jdbcType="INTEGER"/>
+		<result column="label" property="label" jdbcType="VARCHAR"/>
+		<result column="description" property="description" jdbcType="VARCHAR"/>
+		<result column="address" property="address" jdbcType="VARCHAR"/>
+		<result column="geomType" property="geomType" jdbcType="VARCHAR"/>
+		<result column="geomPoint" property="geomPoint" jdbcType="VARCHAR"/>
+		<result column="geomLine" property="geomLine" jdbcType="VARCHAR"/>
+		<result column="geomPolygon" property="geomPolygon" jdbcType="VARCHAR"/>
+		<result column="geomCircle" property="geomCircle" jdbcType="VARCHAR"/>
+		<result column="circleRadius" property="circleRadius" jdbcType="FLOAT"/>
+		<result column="category" property="category" jdbcType="VARCHAR"/>
+		<result column="tags" property="tags" jdbcType="VARCHAR"/>
+		<result column="links" property="links" jdbcType="VARCHAR"/>
+		<result column="author" property="author" jdbcType="VARCHAR"/>
+		<result column="externalId" property="externalId" jdbcType="VARCHAR"/>
+		<result column="oemId" property="oemId" jdbcType="VARCHAR"/>
+		<result column="enterpriseIds" property="enterpriseIds" jdbcType="VARCHAR"/>
+		<result column="displayMode" property="displayMode" jdbcType="VARCHAR"/>
+		<result column="status" property="status" jdbcType="VARCHAR"/>
+		<result column="createdTime" property="createdTime" jdbcType="VARCHAR"/>
+		<result column="updatedTime" property="updatedTime" jdbcType="VARCHAR"/>
+		<result column="deletedTime" property="deletedTime" jdbcType="VARCHAR"/>
+		<result column="metadata" property="metadata" jdbcType="VARCHAR"/>
+	</resultMap>
+    
+    <insert id="insertPoiByBatch" parameterType="java.util.List">
+        insert into gis_poi (
+        <include refid="column_list"/>
+        ) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.label},#{item.description},#{item.address},#{item.geomType},
+            <if test="item.geomPoint!=null">
+		 		ST_GeomFromText(#{item.geomPoint},4326),
+		 	</if>
+		 	<if test="item.geomPoint==null">
+		 		null,
+		 	</if>
+            <if test="item.geomLine!=null">
+		 		ST_GeomFromText(#{item.geomLine},4326),
+		 	</if>
+		 	<if test="item.geomLine==null">
+		 		null,
+		 	</if>
+            <if test="item.geomPolygon!=null">
+		 		ST_GeomFromText(#{item.geomPolygon},4326),
+		 	</if>
+		 	<if test="item.geomPolygon==null">
+		 		null,
+		 	</if>
+            <if test="item.geomCircle!=null">
+		 		ST_GeomFromText(#{item.geomCircle},4326),
+		 	</if>
+		 	<if test="item.geomCircle==null">
+		 		null,
+		 	</if>
+		 	#{item.circleRadius},#{item.category},#{item.tags},#{item.links},
+		 	#{item.author},#{item.externalId},#{item.oemId},#{item.enterpriseIds},
+		 	#{item.displayMode},#{item.status},#{item.metadata}
+		 	)
+        </foreach>
+    </insert>    
+    
+	<update id="updPoi" parameterType="com.ericsson.fms.domain.GisPoiVo">
+		update gis_poi set 
+			updatedTime = now(),
+			label = #{label},
+			description = #{description},
+			address = #{address},
+			geomType = #{geomType},
+			<if test="geomPoint!=null">
+		 		geomPoint = ST_GeomFromText(#{geomPoint},4326),
+		 	</if>
+		 	<if test="geomPoint==null">
+		 		geomPoint = null,
+		 	</if>
+			<if test="geomLine!=null">
+		 		geomLine = ST_GeomFromText(#{geomLine},4326),
+		 	</if>
+		 	<if test="geomLine==null">
+		 		geomLine = null,
+		 	</if>
+			<if test="geomPolygon!=null">
+		 		geomPolygon = ST_GeomFromText(#{geomPolygon},4326),
+		 	</if>
+		 	<if test="geomPolygon==null">
+		 		geomPolygon = null,
+		 	</if>
+			<if test="geomCircle!=null">
+		 		geomCircle = ST_GeomFromText(#{geomCircle},4326),
+		 	</if>
+		 	<if test="geomCircle==null">
+		 		geomCircle = null,
+		 	</if>
+			circleRadius = #{circleRadius},
+			category = #{category},
+			tags = #{tags},
+			links = #{links},
+			author = #{author},
+			externalId = #{externalId},
+			oemId = #{oemId},
+			enterpriseIds = #{enterpriseIds},
+			displayMode = #{displayMode},
+			status = #{status},
+            metadata = #{metadata}
+		where id = #{id}
+    </update>
+
+	<delete id="delPoi">
+		delete from gis_poi where id in (${ids})
+	</delete>
+
+
+
+	<select id="getPoiInfo"  resultMap="poiBean" parameterType="Map">
+		select id,label,description,address,category,geomtype,circleradius,tags,links,author,externalid,oemid,enterpriseids,displaymode,status,createdtime,updatedtime,deletedtime,metadata
+		,ST_AsText(geompoint) as pointCoordinates,ST_AsText(geomline) as lineCoordinates,ST_AsText(geompolygon) as polygonCoordinates,ST_AsText(geomcircle) as circleCoordinates
+		from gis_poi
+		where 1 = 1
+		<if test="geomType != null  and geomType != '' and geomType == 'Point'" >
+			and ST_AsText(ST_ClosestPoint(ST_SetSRID(ST_GeometryFromText(geomline),4326),ST_SetSRID(st_Point(${lon}, ${lat}),4326)))
+		</if>
+		<if test="geomType != null  and geomType != '' and geomType == 'Line'" >
+			and ST_AsText(ST_ShortestLine(ST_SetSRID(ST_GeometryFromText(geomline),4326),ST_SetSRID(st_Point(${lon}, ${lat}),4326)))
+		</if>
+		<if test="geomType != null  and geomType != '' and geomType == 'Polygon'" >
+			and (
+			't' = ST_Contains(ST_MakePolygon(ST_GeomFromText('LINESTRING(${polygonStr})',4326)),geompoint)
+			or 't' = ST_Contains(ST_MakePolygon(ST_GeomFromText('LINESTRING(${polygonStr})',4326)),geomline)
+			or 't' = ST_Contains(ST_MakePolygon(ST_GeomFromText('LINESTRING(${polygonStr})',4326)),geompolygon)
+			or 't' = ST_Contains(ST_MakePolygon(ST_GeomFromText('LINESTRING(${polygonStr})',4326)),geomcircle)
+			)
+		</if>
+		<if test="geomType != null  and geomType != '' and geomType == 'Circle'" >
+			and (
+			't' = ST_DWithin(ST_GeomFromText('POINT(${lon} ${lat})',4326),geomcircle,#{circleRadius})
+			or 't' = ST_DWithin(ST_GeomFromText('POINT(${lon} ${lat})',4326),geompoint,#{circleRadius})
+			or 't' = ST_DWithin(ST_GeomFromText('POINT(${lon} ${lat})',4326),geomline,#{circleRadius})
+			or 't' = ST_DWithin(ST_GeomFromText('POINT(${lon} ${lat})',4326),geompolygon,#{circleRadius})
+			)
+		</if>
+		<if test="label != null  and label != '' ">
+			and label like '%' || #{label} || '%'
+		</if>
+		<if test="address != null  and address != '' ">
+			and address like '%' || #{address} || '%'
+		</if>
+		<if test="description != null  and description != '' ">
+			and description like '%' || #{description} || '%'
+		</if>
+		<if test="category != null  and category != '' ">
+			and category=#{category}
+		</if>
+		<if test="author != null  and author != '' ">
+			and author=#{author}
+		</if>
+		<if test="tags != null  and tags != '' ">
+			and tags in
+			<foreach collection="tags" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="oemId != null  and oemId != '' ">
+			and oemid=#{oemId}
+		</if>
+		<if test="status != null  and status != '' ">
+			and status=#{status}
+		</if>
+		<if test="displayMode != null  and displayMode != '' ">
+			and displaymode=#{displayMode}
+		</if>
+		<if test="enterpriseIds != null  and enterpriseIds != '' ">
+			and enterpriseids in
+			<foreach collection="enterpriseIds" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+</mapper>

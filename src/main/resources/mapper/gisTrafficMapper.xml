@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ericsson.fms.dao.GisTrafficDao">
+
+    <sql id="column_list">
+        segid,
+        speed,
+        strt,
+        fsnd,
+        flow,
+        dens,
+        traveltimeminutes,
+        iflw,
+        oflw,
+        ouca,
+        quel,
+        quen,
+        esta,
+        nveh,
+        stor,
+        queu,
+        ista,
+        basespeed,
+        accu,
+        fore,
+        traffictime
+    </sql>
+
+    <resultMap id="trafficBean" type="com.ericsson.fms.domain.GisTrafficVo" >
+        <result column="segid" property="segId" jdbcType="VARCHAR"/>
+        <result column="speed" property="speed" jdbcType="DOUBLE"/>
+        <result column="strt" property="strt" jdbcType="INTEGER"/>
+        <result column="fsnd" property="fsnd" jdbcType="INTEGER"/>
+        <result column="flow" property="flow" jdbcType="DOUBLE"/>
+        <result column="dens" property="dens" jdbcType="DOUBLE"/>
+        <result column="traveltimeminutes" property="travelTimeMinutes" jdbcType="DOUBLE"/>
+        <result column="iflw" property="iflw" jdbcType="DOUBLE"/>
+        <result column="oflw" property="oflw" jdbcType="DOUBLE"/>
+        <result column="ouca" property="ouca" jdbcType="DOUBLE"/>
+        <result column="quel" property="quel" jdbcType="DOUBLE"/>
+        <result column="quen" property="quen" jdbcType="DOUBLE"/>
+        <result column="esta" property="esta" jdbcType="INTEGER"/>
+        <result column="nveh" property="nveh" jdbcType="DOUBLE"/>
+        <result column="stor" property="stor" jdbcType="DOUBLE"/>
+        <result column="queu" property="queu" jdbcType="DOUBLE"/>
+        <result column="ista" property="ista" jdbcType="INTEGER"/>
+        <result column="basespeed" property="baseSpeed" jdbcType="DOUBLE"/>
+        <result column="accu" property="accu" jdbcType="INTEGER"/>
+        <result column="fore" property="fore" jdbcType="INTEGER"/>
+        <result column="traffictime" property="trafficTime" jdbcType="VARCHAR"/>
+    </resultMap>
+    
+    <insert id="insertTrafficTmpByBatch" parameterType="java.util.List">
+        insert into gis_traffic_tmp (segid,speed,strt,fsnd,flow,dens,traveltimeminutes,iflw,oflw,ouca,quel,quen,esta,nveh,stor,queu,ista,basespeed,accu,fore,traffictime)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.segId},#{item.speed},#{item.strt},#{item.fsnd},#{item.flow},#{item.dens},
+            #{item.travelTimeMinutes},#{item.iflw},#{item.oflw},#{item.ouca},#{item.quel},
+            #{item.quen},#{item.esta},#{item.nveh},#{item.stor},#{item.queu},#{item.ista},
+            #{item.baseSpeed},#{item.accu},#{item.fore},to_timestamp(#{item.trafficTime}, 'YYYY-MM-DD HH24:MI:SS.MS'))
+        </foreach>
+    </insert>
+    
+    <insert id="insertTrafficTmp" parameterType="com.ericsson.fms.domain.GisTrafficVo">
+        insert into gis_traffic_tmp (segid,speed,strt,fsnd,flow,dens,traveltimeminutes,iflw,oflw,ouca,quel,quen,esta,nveh,stor,queu,ista,basespeed,accu,fore,traffictime)
+        values
+            (#{segId},#{speed},#{strt},#{fsnd},#{flow},#{dens},
+            #{travelTimeMinutes},#{iflw},#{oflw},#{ouca},#{quel},
+            #{quen},#{esta},#{nveh},#{stor},#{queu},#{ista},
+            #{baseSpeed},#{accu},#{fore},to_timestamp(#{trafficTime}, 'YYYY-MM-DD HH24:MI:SS.MS'))
+    </insert>
+    
+    
+    <update id="updateTrafficSpeedBucket">
+        update gis_traffic
+        set speedbucket =
+        CASE WHEN (speed/baseSpeed) >= 0.93 and (speed/baseSpeed) &lt;= 1 THEN 3
+        WHEN (speed/baseSpeed) >= 0.63 AND (speed/baseSpeed) &lt;= 0.92  THEN 2
+        WHEN (speed/baseSpeed) >= 0.32 AND (speed/baseSpeed) &lt;= 0.62  THEN 1
+        WHEN (speed/baseSpeed) >= 0 AND (speed/baseSpeed) &lt;= 0.31  THEN 0
+        END
+    </update>
+    
+    <insert id="insertTrafficHistory">
+        insert into gis_traffic_history (segid,speed,strt,fsnd,flow,dens,traveltimeminutes,iflw,oflw,ouca,quel,quen,esta,nveh,stor,queu,ista,basespeed,accu,fore,speedbucket,traffictime)
+        select segid,speed,strt,fsnd,flow,dens,traveltimeminutes,iflw,oflw,ouca,quel,quen,esta,nveh,stor,queu,ista,basespeed,accu,fore,speedbucket,traffictime
+        from gis_traffic where fore = 0
+    </insert>
+    
+    
+    <update id="alterTrafficTmpName">
+        alter table gis_traffic_tmp rename to gis_traffic
+    </update>
+    
+    <update id="dropTrafficTable">
+		drop table gis_traffic
+    </update>
+    
+    <update id="creatTrafficTmpTable">
+	create table IF NOT EXISTS gis_traffic_tmp(
+	  segid character varying(100),
+	  speed numeric,
+	  average integer,
+	  vehiclecount integer,
+	  reference integer,
+	  score integer,
+	  accuracy integer,
+	  traveltimeminutes numeric,
+	  strt bigint,
+	  fsnd bigint,
+	  flow numeric,
+	  dens numeric,
+	  iflw numeric,
+	  oflw numeric,
+	  ouca numeric,
+	  quel numeric,
+	  quen numeric,
+	  esta bigint,
+	  nveh numeric,
+	  stor numeric,
+	  queu numeric,
+	  ista bigint,
+	  basespeed numeric,
+	  accu bigint,
+	  fore bigint,
+	  speedbucket integer,
+	  traffictime timestamp with time zone
+	)
+	</update> 
+
+	<update id="delTrafficHistory">
+		delete from gis_traffic_history where traffictime &lt;= now() - interval '${keepdays} day'
+    </update>
+
+</mapper>
